@@ -1,0 +1,4 @@
+1. On NN1 dataset there was a gap in 1.E-003 of two elements at positions 194 and 195. We filled them with the average of the two adjascent elements.
+
+2. We used the XLS files as sources for the CSVs which are then merged
+to get timeseries.csv which is the main organized and cleaned dataset on which we try forecasting methods.
