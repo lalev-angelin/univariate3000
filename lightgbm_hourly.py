@@ -32,7 +32,7 @@ gbmparams = {"num_leaves":3,
 ### LOAD DATA 
 data = pd.read_csv(datafile_path)
 
-yearly_data = data[data['Type'].isin(["YEARLY"])]
+yearly_data = data[data['Type'].isin(["HOURLY"])]
 
 for index,row in yearly_data.iterrows():
     

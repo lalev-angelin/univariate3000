@@ -24,7 +24,7 @@ model_lock_ext = ".lock"
 forecast_filename = "forecast.csv"
 
 # LGBMRegressor parameters
-gbmparams = {"num_leaves":3,
+gbmparams = {"num_leaves":31,
              "max_depth":-1,
              "learning_rate":0.1,
              "n_estimators":200}
@@ -32,7 +32,7 @@ gbmparams = {"num_leaves":3,
 ### LOAD DATA 
 data = pd.read_csv(datafile_path)
 
-yearly_data = data[data['Type'].isin(["YEARLY"])]
+yearly_data = data[data['Type'].isin(["QUARTERLY"])]
 
 for index,row in yearly_data.iterrows():
     
@@ -87,7 +87,7 @@ for index,row in yearly_data.iterrows():
     ### PREPARE TRAIN AND TEST SET
 
     input_segments, output_segments = computeSlidingWindows(vals, 
-            number_of_predictions,
+            4,
             number_of_predictions)
     
     trainX  = np.array(input_segments[:-1])
@@ -128,5 +128,5 @@ for index,row in yearly_data.iterrows():
 
     file=open(done_file_path, "x")
     file.close()
-
+    
     os.remove(lock_file_path)
