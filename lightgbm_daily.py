@@ -32,11 +32,11 @@ gbmparams = {"num_leaves":31,
 ### LOAD DATA 
 data = pd.read_csv(datafile_path)
 
-monthly_data = data[data['Type'].isin(["MONTHLY"])]
+daily_data = data[data['Type'].isin(["DAILY"])]
 
-for index,row in monthly_data.iterrows():
-
-    try:
+for index,row in daily_data.iterrows():
+   
+    try: 
 
         # Take row of data
         series_name = "%s_%s"% (row["Competition"], row["Series_Name"])
@@ -89,7 +89,7 @@ for index,row in monthly_data.iterrows():
         ### PREPARE TRAIN AND TEST SET
 
         input_segments, output_segments = computeSlidingWindows(vals, 
-                12,
+                30,
                 number_of_predictions)
     
         trainX  = np.array(input_segments[:-number_of_predictions])
@@ -131,6 +131,6 @@ for index,row in monthly_data.iterrows():
         file=open(done_file_path, "x")
         file.close()
 
-        os.remove(lock_file_path)   
+        os.remove(lock_file_path)
     except:
         sys.stderr.write("Error processing %s \n"%series_name)
