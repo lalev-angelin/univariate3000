@@ -8,7 +8,7 @@ import os
 import sys
 import numpy as np
 import pickle
-from lightgbm import LGBMRegressor
+from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from statsmodels.graphics.tsaplots import plot_pacf
@@ -25,9 +25,9 @@ forecast_filename = "forecast.csv"
 
 # LGBMRegressor parameters
 gbmparams = {"num_leaves":31,
-             "max_depth":-1,
+             "max_depth":6,
              "learning_rate":0.1,
-             "n_estimators":500}
+             "n_estimators":1000}
 
 ### LOAD DATA 
 data = pd.read_csv(datafile_path)
@@ -53,7 +53,7 @@ for index,row in weekly_data.iterrows():
         sys.stderr.write("Now processing %s \n"%series_name)
 
         # Compute several paths, that we need 
-        model_spec ="lightgbm_model_numleaves_%d_maxdepth_%d_learningrate_%d_nestimators_%d"%(gbmparams["num_leaves"], gbmparams["max_depth"], gbmparams["learning_rate"], gbmparams["n_estimators"])
+        model_spec ="xgboost_model_maxdepth_%d_learningrate_%d_nestimators_%d"%(gbmparams["max_depth"], gbmparams["learning_rate"], gbmparams["n_estimators"])
 
         dir_path = os.path.join(results_subdir, series_name, model_spec)
         dir_path = dir_path.replace("-1", "NIL") 
@@ -97,13 +97,12 @@ for index,row in weekly_data.iterrows():
         testY = np.array(output_segments[-1:])
 
         ### FIT
-        regressor = LGBMRegressor(boosting_type="gbdt",
-                                      num_leaves=gbmparams['num_leaves'],
-                                      max_depth=gbmparams['max_depth'],
-                                      learning_rate=gbmparams['learning_rate'],
-                                      n_estimators=gbmparams['n_estimators']
-                                      )
- 
+        regressor = XGBRegressor(
+                                  learning_rate=gbmparams['learning_rate'],
+                                  max_depth=gbmparams['max_depth'],
+                                  n_estimators=gbmparams['n_estimators'],
+                                  gpu_id=0)
+
         multi_output_regressor = MultiOutputRegressor(regressor)
 
         multi_output_regressor.fit(trainX, trainY)

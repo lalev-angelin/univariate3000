@@ -27,7 +27,7 @@ forecast_filename = "forecast.csv"
 gbmparams = {"num_leaves":5,
              "max_depth":3,
              "learning_rate":0.1,
-             "n_estimators":500}
+             "n_estimators":1000}
 
 ### LOAD DATA 
 data = pd.read_csv(datafile_path)
