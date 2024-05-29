@@ -4,7 +4,10 @@
 @author: Angelin Lalev
 """
 import pandas as pd
-import numpy as np 
+import numpy as np
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_percentage_error
+import math 
 
 ######################################################################
 # Most of our models get vectors as input and output. This requires 
@@ -40,3 +43,9 @@ def computeSlidingWindows(datalist: list[float], input_segment_length: int, outp
     output_segments = output_segments[input_segment_length:]
  
     return(np.array(input_segments), np.array(output_segments))
+
+def computeRMSE(actual, forecast, position): 
+    return math.sqrt(mean_squared_error(actual[:-position], forecast[:-position]))
+
+def computeMAPE(actual, forecast, position): 
+    return mean_absolute_percentage_error(actual[:-position], forecast[:-position ]) 
