@@ -106,23 +106,26 @@ for index,row in yearly_data.iterrows():
                                   )
  
         multi_output_regressor = MultiOutputRegressor(regressor)
-
         multi_output_regressor.fit(trainX, trainY)
 
         ### SAVE MODEL
         file = open(model_file_path, "wb")
-        pickle.dump(regressor, file)
+        pickle.dump(multi_output_regressor, file)
         file.close()
 
         ### PREDICT
-        predictY = multi_output_regressor.predict(testX)
+        predictY = multi_output_regressor.predict(testX + testY)
+
+        sys.exit(1)
+
+
+
 
         ### SAVE
         output_data = pd.DataFrame(columns=["Actual", "Projection"])
         output_data["Actual"]=vals
     
         vals=vals[:-len(predictY[0])]
-    
         vals.extend(predictY[0])
     
         output_data["Projection"]=vals
