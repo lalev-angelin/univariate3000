@@ -6,14 +6,10 @@
 import pandas as pd
 import os
 import sys
-import numpy as np
 import pickle
+from lightgbm import LGBMRegressor
+from xgboost import XGBRegressor
 from catboost import CatBoostRegressor
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from statsmodels.graphics.tsaplots import plot_pacf
-from sklearn.multioutput import MultiOutputRegressor
-
 from subroutines import computeSlidingWindows 
 
 ### TUNING AND CONFIG
@@ -23,23 +19,60 @@ model_done_ext = ".done"
 model_lock_ext = ".lock"
 forecast_filename = "forecast.csv"
 
-# LGBMRegressor parameters
+# LGBMRegressor default parameters. Included for clarity only...
 gbmparams = {
              "max_depth":6,
-             "learning_rate":0.03,
+             "learning_rate":0.1,
              "n_estimators":1000}
+
+# What type of data
+type_of_data = "OTHER"
+
+# Model spec template 
+model_spec_template ="catboost_model_maxdepth_%d_learningrate_%d_nestimators_%d"
+
+# Set the regressor type
+regressor_type = "catboost"
+
+### START
+
+# Look as many periods back as you are required to predict forward
+if type_of_data == "YEARLY":
+    # As many years back as you need to forecast forward
+    compute_lookback_periods = lambda forward_look, overall_length : forward_look
+elif type_of_data == "QUARTERLY":
+    # Four periods back
+    compute_lookback_periods = lambda forward_look, overall_length : 4
+elif type_of_data == "MONTHLY":
+    # Twelve periods back
+    compute_lookback_periods = lambda forward_look, overall_length : 12
+elif type_of_data == "WEEKLY":
+    # 53 periods back
+    compute_lookback_periods = lambda forward_look, overall_length : 53
+elif type_of_data == "DAILY":
+    # 31 days back
+    compute_lookback_periods = lambda forward_look, overall_length : 30
+elif type_of_data == "HOURLY":
+    # 168 hours back (a week)
+    compute_lookback_periods = lambda forward_look, overall_length : 168
+elif type_of_data == "OTHER":
+    # 1/8 of the total periods
+    compute_lookback_periods = lambda forward_look, overall_length : overall_length//8
+else:
+    sys.stderr.write("Invalid type_of_data value")
+    sys.exit(1)
+
 
 ### LOAD DATA 
 data = pd.read_csv(datafile_path)
 
-other_data = data[data['Type'].isin(["OTHER"])]
+yearly_data = data[data['Type'].isin([type_of_data])]
 
-for index,row in other_data.iterrows():
-   
+for index,row in yearly_data.iterrows():
+
     try:
 
         # Take row of data
-
         series_name = "%s_%s"% (row["Competition"], row["Series_Name"])
         series_category = row["Category"]
         series_type = row["Type"]
@@ -55,7 +88,7 @@ for index,row in other_data.iterrows():
         sys.stderr.write("Now processing %s \n"%series_name)
 
         # Compute several paths, that we need 
-        model_spec ="catboost_model_learningrate_%d_nestimators_%d"%(gbmparams["max_depth"], gbmparams["learning_rate"], gbmparams["n_estimators"])
+        model_spec = model_spec_template%(gbmparams["max_depth"], gbmparams["learning_rate"], gbmparams["n_estimators"])
 
         dir_path = os.path.join(results_subdir, series_name, model_spec)
         dir_path = dir_path.replace("-1", "NIL") 
@@ -86,51 +119,83 @@ for index,row in other_data.iterrows():
             except FileExistsError:
                 sys.stderr.write("Lock exists for %s. Skipping. \n", model_lock_path, series_name)
                 continue 
-        
+       
+
+        ### COMPUTE FORWARD (HOW FAR WE FORECAST) AND BACKWARD (HOW BACK WE LOOK)
+        ### "HORIZON" 
+        forward_horizon = number_of_predictions
+        backward_horizon = compute_lookback_periods(number_of_predictions, len(vals))
+
         ### PREPARE TRAIN AND TEST SET
-
         input_segments, output_segments = computeSlidingWindows(vals, 
-                len(vals)//4,
-                number_of_predictions)
+            backward_horizon,
+            forward_horizon)
     
-        trainX  = np.array(input_segments[:-number_of_predictions])
-        testX = np.array(input_segments[-1:])
-        trainY = np.array(output_segments[:-number_of_predictions])
-        testY = np.array(output_segments[-1:])
+        trainX = input_segments[:-forward_horizon]
+        trainY = output_segments[:-forward_horizon]
+        #print("TrainX\n", trainX)
+        #print("TrainY\n", trainY)
 
-        ### FIT
-        regressor = CatBoostRegressor(
-                                  learning_rate=gbmparams['learning_rate'],
-                                  max_depth=gbmparams['max_depth'],
-                                  n_estimators=gbmparams['n_estimators'])
+        # The regressor does not support vector output.
+        # So we need to do it element by element 
+        regressors = []
+        for period in range(0, forward_horizon): 
+            trainYElement = [segment[period] for segment in trainY]
 
+            ### FIT
+            if regressor_type == 'lightgbm': 
+                    regressor = LGBMRegressor(boosting_type="gbdt",
+                                          num_leaves=gbmparams['num_leaves'],
+                                          max_depth=gbmparams['max_depth'],
+                                          learning_rate=gbmparams['learning_rate'],
+                                          n_estimators=gbmparams['n_estimators']
+                                          )
+            elif regressor_type == 'xgboost':
+                    regressor = XGBRegressor(
+                                          max_depth=gbmparams['max_depth'],
+                                          learning_rate=gbmparams['learning_rate'],
+                                          n_estimators=gbmparams['n_estimators']
+                                          )
+            elif regressor_type == 'catboost':
+                    regressor = CatBoostRegressor(
+                                          max_depth=gbmparams['max_depth'],
+                                          learning_rate=gbmparams['learning_rate'],
+                                          n_estimators=gbmparams['n_estimators']
+                                          )
+            else: 
+                sys.stderr.write("Invalid choice of regressor")
+                sys.exit(20)
 
-        multi_output_regressor = MultiOutputRegressor(regressor)
+            regressor.fit(trainX, trainYElement)
 
-        multi_output_regressor.fit(trainX, trainY)
+            ### SAVE MODEL
+            file = open(model_file_path + str(period+1), "wb")
+            pickle.dump(regressor, file)
+            file.close()
 
-        ### SAVE MODEL
-        file = open(model_file_path, "wb")
-        pickle.dump(regressor, file)
-        file.close()
+            regressors.append(regressor)
 
         ### PREDICT
-        predictY = multi_output_regressor.predict(testX)
+        regressor = regressors[0]
+        predictY = regressor.predict(input_segments).tolist()
+        for i in range(1, forward_horizon):
+            regressor = regressors[i]
+            predictY.append(regressor.predict(input_segments[-1:])[0])
+
+        predictY = ['N/A'] * backward_horizon + predictY 
+        #print(predictY)
 
         ### SAVE
-        output_data = pd.DataFrame(columns=["Actual", "Projection"])
+        output_data = pd.DataFrame(columns=["Actual", "Forecast"])
         output_data["Actual"]=vals
-    
-        vals=vals[:-len(predictY[0])]
-    
-        vals.extend(predictY[0])
-    
-        output_data["Projection"]=vals
+        output_data["Forecast"]=predictY
         output_data.to_csv(forecast_file_path)
 
         file=open(done_file_path, "x")
         file.close()
 
         os.remove(lock_file_path)
-    except:
+    except Exception as e:
         sys.stderr.write("Error processing %s \n"%series_name)
+        sys.stderr.write(str(e))
+
