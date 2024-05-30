@@ -29,9 +29,9 @@ gbmparams = {
 ### LOAD DATA 
 data = pd.read_csv(datafile_path)
 
-monthly_data = data[data['Type'].isin(["MONTHLY"])]
+daily_data = data[data['Type'].isin(["DAILY"])]
 
-for index,row in monthly_data.iterrows():
+for index,row in daily_data.iterrows():
 
     try:
 
@@ -86,7 +86,7 @@ for index,row in monthly_data.iterrows():
         ### PREPARE TRAIN AND TEST SET
 
         input_segments, output_segments = computeSlidingWindows(vals, 
-                12,
+                30,
                 number_of_predictions)
     
         trainX  = np.array(input_segments[:-number_of_predictions])

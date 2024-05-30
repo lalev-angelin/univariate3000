@@ -9,6 +9,9 @@ import sys
 import numpy as np
 import pickle
 from catboost import CatBoostRegressor
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+from statsmodels.graphics.tsaplots import plot_pacf
 from sklearn.multioutput import MultiOutputRegressor
 
 from subroutines import computeSlidingWindows 
@@ -16,7 +19,7 @@ from subroutines import computeSlidingWindows
 ### TUNING AND CONFIG
 datafile_path = os.path.join("data","timeseries.csv")
 results_subdir = "series"
-model_done_ext = ".done1"
+model_done_ext = ".done"
 model_lock_ext = ".lock"
 forecast_filename = "forecast.csv"
 
@@ -29,13 +32,14 @@ gbmparams = {
 ### LOAD DATA 
 data = pd.read_csv(datafile_path)
 
-monthly_data = data[data['Type'].isin(["MONTHLY"])]
+other_data = data[data['Type'].isin(["OTHER"])]
 
-for index,row in monthly_data.iterrows():
-
+for index,row in other_data.iterrows():
+   
     try:
 
         # Take row of data
+
         series_name = "%s_%s"% (row["Competition"], row["Series_Name"])
         series_category = row["Category"]
         series_type = row["Type"]
@@ -51,7 +55,7 @@ for index,row in monthly_data.iterrows():
         sys.stderr.write("Now processing %s \n"%series_name)
 
         # Compute several paths, that we need 
-        model_spec ="catboost_maxdepth_%d_learningrate_%d_nestimators_%d"%(gbmparams["max_depth"], gbmparams["learning_rate"], gbmparams["n_estimators"])
+        model_spec ="catboost_model_learningrate_%d_nestimators_%d"%(gbmparams["max_depth"], gbmparams["learning_rate"], gbmparams["n_estimators"])
 
         dir_path = os.path.join(results_subdir, series_name, model_spec)
         dir_path = dir_path.replace("-1", "NIL") 
@@ -86,7 +90,7 @@ for index,row in monthly_data.iterrows():
         ### PREPARE TRAIN AND TEST SET
 
         input_segments, output_segments = computeSlidingWindows(vals, 
-                12,
+                len(vals)//4,
                 number_of_predictions)
     
         trainX  = np.array(input_segments[:-number_of_predictions])
@@ -96,10 +100,10 @@ for index,row in monthly_data.iterrows():
 
         ### FIT
         regressor = CatBoostRegressor(
-                                  max_depth=gbmparams['max_depth'],
                                   learning_rate=gbmparams['learning_rate'],
-                                  n_estimators=gbmparams['n_estimators']
-                                  )
+                                  max_depth=gbmparams['max_depth'],
+                                  n_estimators=gbmparams['n_estimators'])
+
 
         multi_output_regressor = MultiOutputRegressor(regressor)
 
@@ -127,6 +131,6 @@ for index,row in monthly_data.iterrows():
         file=open(done_file_path, "x")
         file.close()
 
-        os.remove(lock_file_path)   
+        os.remove(lock_file_path)
     except:
         sys.stderr.write("Error processing %s \n"%series_name)
