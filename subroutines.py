@@ -45,7 +45,7 @@ def computeSlidingWindows(datalist: list[float], input_segment_length: int, outp
     return(np.array(input_segments), np.array(output_segments))
 
 def computeRMSE(actual, forecast, position): 
-    return math.sqrt(mean_squared_error(actual[:-position], forecast[:-position]))
+    return math.sqrt(mean_squared_error(actual[-position:], forecast[-position:]))
 
 def computeMAPE(actual, forecast, position): 
-    return mean_absolute_percentage_error(actual[:-position], forecast[:-position ]) 
+    return mean_absolute_percentage_error(actual[-position:], forecast[-position:]) 
