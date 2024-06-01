@@ -10,7 +10,7 @@ class Forecast(ABC):
     __timeseries__: list = []
     __dates__: list = []
     __forecast__: list = []
-    __forecast_horizon__: int = 0
+    __forecast_horizon__: int = 1 
 
     def __init__(self, timeseries: list, dates: list = None, forecast_horizon : int = 1): 
         assert forecast_horizon > 0, "Parameter forecast_horizon must be 1 or greater."
@@ -18,15 +18,17 @@ class Forecast(ABC):
 
         self.__timeseries__ = timeseries
         self.__dates__ = dates
+        self.__forecast_horizon__ = forecast_horizon
+
         generateForecast(forecast_horizon)
 
     @abstractmethod
-    def generateForecast(forecast_horizon) -> list:
+    def generateForecast() -> None:
         pass         
 
     def asList() -> list:
         return __forecast__
 
     def asNpArray() -> np.ndarray:
-        return np.array(list)
+        return np.array(__forecast__)
 
