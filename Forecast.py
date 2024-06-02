@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_percentage_error
-
+import math
 
 ####################################################################
 # The abstract class representing the generic functionality of a 
@@ -10,44 +10,61 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 class Forecast(ABC): 
    
-    __timeseries__: list = []
-    __dates__: list = []
-    __forecast__: list = []
-    __forecast_horizon__: int = 1 
-    __number_of_subperiods__: int = None
-    __starting_subperiod__: int = 0 
+    _timeseries : list = []
+    _dates : list = []
+    _forecast : list = []
+    _forecast_horizon : int = 1 
+    _number_of_subperiods : int = None
+    _starting_subperiod : int = 0 
 
     def __init__(self, timeseries: list, dates: list = None, forecast_horizon : int = 1, 
             number_of_subperiods = None, starting_subperiod = 0): 
+
         assert forecast_horizon > 0, "Parameter forecast_horizon must be 1 or greater."
-        assert len(__timeseries__) > forecast_horizon, "The timeseries to be forecasted must contain more elements than specified in forecast_horizon"
+        assert len(timeseries) > forecast_horizon, "The timeseries to be forecasted must contain more elements than specified in forecast_horizon"
 
-        self.__timeseries__ = timeseries
-        self.__dates__ = dates
-        self.__forecast_horizon__ = forecast_horizon
-        self.__number_of_subperiods__ = number_of_subperiods
-        self.__starting_subperiod__ = starting_subperiod
+        self._timeseries = timeseries
+        self._dates = dates
+        self._forecast_horizon = forecast_horizon
+        self._number_of_subperiods = number_of_subperiods
+        self._starting_subperiod = starting_subperiod
 
-        generateForecast(forecast_horizon)
-
+        self.generate_forecast()
+    
     @abstractmethod
-    def generateForecast() -> None:
+    def generate_forecast(self) -> None:
         pass         
 
-    def asList() -> list:
-        return __forecast__
+    def as_list(self) -> list:
+        return self._forecast
 
-    def asNpArray() -> np.ndarray:
-        return np.array(__forecast__)
+    def as_nparray(self) -> np.ndarray:
+        return np.array(self._forecast)
 
-    def computeMAPE(from_position : int) -> float: 
+
+    def compute_mape(self, actual: list, forecast: list, from_position : int = None, to_position: int = None) -> float: 
+
+        assert len(actual) == len(forecast), "Length of the actual and forecast lists must be equal"
+
         if from_position is None:
-            return mean_absolute_percentage_error(__timeseries__, __forecast__)
-        else: 
-            return mean_absolute_percentage_error(__timeseries__[-position:], __forecast__[-position:])
+            from_position = 0
+
+        if to_position is None: 
+            to_position = len(actual)
+
+        return mean_absolute_percentage_error(actual[from_position:to_position], forecast[from_position:to_position])
+ 
+
+    def compute_rmse(self, actual: list, forecast: list, from_position : int = None, to_position: int = None) -> float: 
+
+        assert len(actual) == len(forecast), "Length of the actual and forecast lists must be equal"
+
+        if from_position is None:
+            from_position = 0
+
+        if to_position is None: 
+            to_position = len(actual)
+
+        return math.sqrt(mean_squared_error(actual[from_position:to_position], forecast[from_position:to_position]))
+
          
-    def computeRMSE(from_position : int) -> float:
-        if from_position is None: 
-            return math.sqrt(mean_squared_error(__timeseries__, __forecast__))
-        else: 
-            return math.sqrt(mean_squared_error(__timeseries__[-position:], __forecast__[-position:]))

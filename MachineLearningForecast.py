@@ -1,4 +1,5 @@
 from Forecast import Forecast
+from abc import abstractmethod 
 
 # The abstract class representing the generic functionality of a
 # forecasting method.
@@ -72,7 +73,6 @@ class MachineLearningForecast(Forecast):
         return list(lst)
         
 
-
     @abstractmethod
-    def generateForecast() -> list:
+    def generate_forecast(self) -> None:
         pass
