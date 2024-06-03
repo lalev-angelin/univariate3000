@@ -1,5 +1,6 @@
 from Forecast import Forecast
 from abc import abstractmethod 
+import sys
 
 # The abstract class representing the generic functionality of a
 # forecasting method.
@@ -17,9 +18,8 @@ class MachineLearningForecast(Forecast):
         assert lookback>0, "Lookback must be value greater than 1"
         self.__lookback__ = lookback
          
-        Forecast.__init__(self, timeseries, dates = dates, forecast_horizon=forecast_horizon, 
-                number_of_subperiods = number_of_subperiod, sarting_subperiod=starting_subperiod)
-        
+        super().__init__(timeseries, dates=dates, forecast_horizon=forecast_horizon, 
+                number_of_subperiods=number_of_subperiods, starting_subperiod=starting_subperiod)
 
 
 
@@ -28,7 +28,7 @@ class MachineLearningForecast(Forecast):
     # input data of our timeseries to be organized in such
     # overlapping segments/vectors.
 
-    def compute_sliding_windows(datalist: list, input_segment_length: int, output_segment_length: int = 1) -> list:
+    def compute_sliding_windows(self, datalist: list, input_segment_length: int, output_segment_length: int = 1) -> list:
 
         # We start by spliting the whole row into "training" windows of
         # input_segment_length. Keep in mind that if you pick  list of say 7
@@ -54,21 +54,35 @@ class MachineLearningForecast(Forecast):
         # input segments to allign them with the output segments.
         # We remove __input_length_segments___ items from __output_segments__
         input_segments = input_segments[:-output_segment_length]
-   
+        output_segments = output_segments[input_segment_length:]
+
+        return(input_segments, output_segments)
+
 
     ####################################################################
     # Puts the number of period into the segment 
     # It also puts the number of subperiods  
     #
-    def number_input_segments(datalist: list, number_of_subperiods=None, starting_subperiod=None)->list:
+    def number_input_segments(self, datalist: list, number_of_subperiods=None, starting_subperiod=None)->list:
 
-        lst = tuple(datalist)
-        
+        resultlst = []
+
         if (number_of_subperiods!=None and starting_subperiod!=None): 
-            ran = range(starting_subperiod, starting_subperiod+number_of_subperiods)%number_of_subperiods 
-            lst = zip(tuple(ran))     
+            ran = [r % number_of_subperiods for r in range(starting_subperiod, starting_subperiod + len(datalist))] 
 
-        lst = zip(range(1, len(datalist)+1), lst)
+        counter = 0
+        for lst in datalist:
+            if (number_of_subperiods!=None): 
+                lst = [counter]+[ran[counter]]+lst
+            else:
+                lst = [counter]+lsta
+
+            resultlst.append(lst)
+            counter=counter+1
+
+        print(resultlst)
+        exit(0)
+         
 
         return list(lst)
         
