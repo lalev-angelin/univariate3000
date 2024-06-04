@@ -55,8 +55,8 @@ class LightGBMForecast(GBDTForecast):
         assert len(self._forecast)==len(self._timeseries), "Internal error when compiling the forecast"
 
     def asses_forecast_mape(self) -> float:
-            self.compute_mape(self._timeseries, self._forecast, from_position = len(self._timeseries) - self._forecast_horizon)
+            return self.compute_mape(self._timeseries, self._forecast, from_position = len(self._timeseries) - self._forecast_horizon)
 
     def asses_forecast_rmse(self) -> float:
-            self.compute_rmse(self._timeseries, self._forecast, from_position = len(self._timeseries) - self._forecast_horizon)
+            return self.compute_rmse(self._timeseries, self._forecast, from_position = len(self._timeseries) - self._forecast_horizon)
 
