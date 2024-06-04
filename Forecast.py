@@ -10,26 +10,21 @@ import math
 
 class Forecast(ABC): 
    
-    _timeseries : list = []
-    _dates : list = []
-    _forecast : list = []
-    _forecast_horizon : int = 1 
-    _number_of_subperiods : int = None
-    _starting_subperiod : int = 0 
+    def __init__(self, timeseries: list, 
+                 dates: list = None, 
+                 forecast_horizon : int = 1, 
+                 number_of_subperiods : int = None, 
+                 starting_subperiod : int = 0): 
 
-    def __init__(self, timeseries: list, dates: list = None, forecast_horizon : int = 1, 
-            number_of_subperiods : int = None, starting_subperiod : int = 0): 
-
-        assert forecast_horizon > 0, "Parameter forecast_horizon must be 1 or greater."
-        assert len(timeseries) > forecast_horizon, "The timeseries to be forecasted must contain more elements than specified in forecast_horizon"
 
         self._timeseries = timeseries
         self._dates = dates
+        assert forecast_horizon > 0, "Parameter forecast_horizon must be 1 or greater."
+        assert len(timeseries) > forecast_horizon, "The timeseries to be forecasted must contain more elements than specified in forecast_horizon"
         self._forecast_horizon = forecast_horizon
         self._number_of_subperiods = number_of_subperiods
         self._starting_subperiod = starting_subperiod
 
-        self.generate_forecast()
     
     @abstractmethod
     def generate_forecast(self) -> None:

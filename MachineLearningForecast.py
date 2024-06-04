@@ -7,20 +7,26 @@ import sys
 
 class MachineLearningForecast(Forecast):
 
-    __lookback__: int = 1
 
+    def __init__(self, 
+                 timeseries: list, 
+                 dates: list = None, 
+                 forecast_horizon : int = 1, 
+                 number_of_subperiods=None,
+                 starting_subperiod : int = 1, 
+                 lookback: int = 1):
+        
+        super().__init__(
+                timeseries, 
+                dates=dates, 
+                forecast_horizon=forecast_horizon, 
+                number_of_subperiods=number_of_subperiods, 
+                starting_subperiod=starting_subperiod)
 
-    #####################################################################
-    # Constructor 
-
-    def __init__(self, timeseries: list, dates: list = None, forecast_horizon : int = 1, number_of_subperiods=None,
-                starting_subperiod : int = 1, lookback: int = 1):
         assert lookback>0, "Lookback must be value greater than 1"
-        self.__lookback__ = lookback
-         
-        super().__init__(timeseries, dates=dates, forecast_horizon=forecast_horizon, 
-                number_of_subperiods=number_of_subperiods, starting_subperiod=starting_subperiod)
-
+        self._lookback = lookback
+ 
+        
 
 
     ######################################################################
@@ -75,16 +81,13 @@ class MachineLearningForecast(Forecast):
             if (number_of_subperiods!=None): 
                 lst = [counter]+[ran[counter]]+lst
             else:
-                lst = [counter]+lsta
+                lst = [counter]+lst
 
             resultlst.append(lst)
             counter=counter+1
 
-        print(resultlst)
-        exit(0)
-         
 
-        return list(lst)
+        return resultlst
         
 
     @abstractmethod
