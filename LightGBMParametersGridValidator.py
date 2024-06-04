@@ -75,6 +75,9 @@ class LightGBMParametersGridValidator:
     
     def search(self): 
         
+        if self._logfile is not None: 
+            self._logfile.write("[Info] Starting search for hyper-parameters\n")
+         
         params = [self._num_leaves_range,         # 0
             self._max_depth_range,                # 1
             self._learning_rate_range,            # 2
@@ -110,10 +113,8 @@ class LightGBMParametersGridValidator:
             if self._logfile is not None: 
                 self._logfile.write("[INFO] Now testing\n")
                 for key, value in args.items(): 
-                    self._logfile.write("[INFO] %s:%s"%(key, value))
-         
+                    self._logfile.write("[INFO] %s:%s\n"%(key, value))
             
-            print(*args, "\n")
             forecast, mape = self.validate_combination(**args)
-            print("MAPE: ", mape)
             
+            self._logfile.write("[INFO] MAPE: %f\n"%mape)

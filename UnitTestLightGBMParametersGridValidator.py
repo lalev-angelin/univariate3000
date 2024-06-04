@@ -16,8 +16,8 @@ validator = LightGBMParametersGridValidator(
     lookback=6, 
     number_of_subperiods=12,
     starting_subperiod=3, 
-    num_leaves_range=range(2,5),
-    n_estimators_range=range(500, 600, 10), 
+    min_data_in_leaf=range(2, 4),
+    min_data_in_bin=range(2, 4),
     logfile=logfile)
 
 forecast, mape = validator.validate_combination(
