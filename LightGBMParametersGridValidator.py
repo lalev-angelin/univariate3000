@@ -92,6 +92,10 @@ class LightGBMParametersGridValidator:
         
         #print(combinations)
         
+        best_forecast = None
+        best_combination = None
+        best_mape = np.NaN
+
         for combination in combinations: 
             args={}
            
@@ -118,3 +122,18 @@ class LightGBMParametersGridValidator:
             forecast, mape = self.validate_combination(**args)
             
             self._logfile.write("[INFO] MAPE: %f\n"%mape)
+
+            if np.isnan(best_mape) or best_mape>mape:
+                best_mape = mape
+                best_forecast = forecast
+                best_combination = args
+
+            if self._logfile is not None: 
+                self._logfile.write("[INFO] Best MAPE %f\n"%best_mape)
+                for key, value in args.items(): 
+                    self._logfile.write("[INFO] %s:%s\n"%(key, value))
+ 
+        
+        return best_forecast, best_mape, best_combination
+
+

@@ -10,14 +10,22 @@ nn1_data_loc = os.path.join("data", "original", "nn1.csv")
 m1_data_loc = os.path.join("data", "original", "m1.csv")
 m3_data_loc = os.path.join("data", "original", "m3.csv")
 final_data_loc = os.path.join("data","timeseries.csv")
+filtered_data_loc = os.path.join("data", "filtered.csv")
+filtered_short_loc = os.path.join("data", "filtered_short.csv")
+
 
 ### IMPORT & TRANSFORM OF M1 DATASET
 
 m1_data=pd.read_csv(m1_data_loc, header=0)
 m1_data["Competition"]="M1"
-m1_data.rename(columns={"Series":"Series_Name", "N Obs":"Number_Of_Observations",
-    "NF":"Number_Of_Predictions"}, inplace=True)
-m1_data.drop(columns={'Starting date'}, inplace=True)
+
+m1_data.rename(columns={"Series":"Series_Name", 
+    "N Obs":"Number_Of_Observations",
+    "NF":"Number_Of_Predictions",
+    "Number Of Subperiods": "Number_Of_Subperiods",
+    "Starting Subperiod": "Starting_Subperiod",
+    "Starting date": "Starting_Date"}, inplace=True)
+
 m1_data.dropna(axis=1, inplace=True, how='all')
 m1_data["Total_Datapoints"]=m1_data['Number_Of_Observations']+m1_data['Number_Of_Predictions']
 
@@ -51,6 +59,16 @@ col_list.insert(6, val)
 # Send Total_Datapoints eighth 
 val = col_list.pop(col_list.index("Total_Datapoints"))
 col_list.insert(7, val)
+# Send Number_Of_Subperiods to ninth place
+val = col_list.pop(col_list.index("Number_Of_Subperiods"))
+col_list.insert(8, val)
+# Send Starting_Subperiod to tenth place
+val = col_list.pop(col_list.index("Starting_Subperiod"))
+col_list.insert(9, val)
+# Send Starting_Date to eleventh place
+val = col_list.pop(col_list.index("Starting_Date"))
+col_list.insert(10, val)
+
 #print(col_list)
 #print(m1_data.head)
 #sys.exit(1)
@@ -58,7 +76,7 @@ col_list.insert(7, val)
 m1_data=m1_data[col_list]
 #print(m1_data.head)
 #sys.exit(1)
-m1_data.to_csv("dump1.csv")
+#m1_data.to_csv("dump1.csv")
 #sys.exit(1)
 
 
@@ -75,12 +93,25 @@ nn_data.columns=names
 nn_data.drop(["Group","No"], axis=1, inplace=True)
 nn_data['Type']=nn_data['Type'].str.upper()
 
+nn_data['Number_Of_Subperiods']=-1
+nn_data['Starting_Subperiod']=-1
+nn_data['Starting_Date']=""
+
 nn_data.insert(2, "Category", "OTHER")
 nn_data.insert(4, "Seasonality", pd.NA) 
 nn_data.insert(6, 'Number_Of_Observations', nn_data['Total_Datapoints']-nn_data['Number_Of_Predictions'])
 
 col = nn_data.pop('Total_Datapoints')
 nn_data.insert(7, 'Total_Datapoints', col)
+
+col = nn_data.pop('Number_Of_Subperiods')
+nn_data.insert(8, 'Number_Of_Subperiods', col)
+
+col = nn_data.pop('Starting_Subperiod')
+nn_data.insert(9, 'Starting_Subperiod', col)
+
+col = nn_data.pop('Starting_Date')
+nn_data.insert(10, 'Starting_Date', col)
 
 #print(nn_data.head)
 #sys.exit(1)
@@ -90,9 +121,13 @@ nn_data.to_csv("dump2.csv")
 ### IMPORT & TRANSFORM OF M3 DATASET
 m3_data=pd.read_csv(m3_data_loc, header=0)
 m3_data["Competition"]="M3"
-m3_data.rename(columns={"Series":"Series_Name", "N":"Total_Datapoints",
-    "NF":"Number_Of_Predictions"}, inplace=True)
-m3_data.drop(columns={"Starting Year", "Starting Month"}, inplace=True)
+m3_data.rename(columns={"Series":"Series_Name", 
+    "N":"Total_Datapoints",
+    "NF":"Number_Of_Predictions",
+    "Number Of Subperiods": "Number_Of_Subperiods",
+    "Starting Month": "Starting_Subperiod", 
+    "Starting Year": "Starting_Date"}, inplace=True)
+
 m3_data["Number_Of_Observations"]=m3_data['Total_Datapoints']-m3_data['Number_Of_Predictions']
 m3_data.insert(2, "Seasonality", pd.NA) 
 
@@ -126,6 +161,15 @@ col_list.insert(6, val)
 # Send Total_Datapoints eighth 
 val = col_list.pop(col_list.index("Total_Datapoints"))
 col_list.insert(7, val)
+# Send Number_Of_Subperiods to ninth place
+val = col_list.pop(col_list.index("Number_Of_Subperiods"))
+col_list.insert(8, val)
+# Send Starting_Subperiod to tenth place
+val = col_list.pop(col_list.index("Starting_Subperiod"))
+col_list.insert(9, val)
+# Send Starting_Date to eleventh place
+val = col_list.pop(col_list.index("Starting_Date"))
+col_list.insert(10, val)
 #print(col_list)
 #print(m1_data.head)
 #sys.exit(1)
@@ -158,3 +202,9 @@ final['Type']=final['Type'].replace({"MONTHLYLY":"MONTHLY"})
 
 # Save
 final.to_csv(final_data_loc, index=False)
+
+final = final[final['Type'].isin(['YEARLY', 'MONTHLY', 'QUARTERLY'])]
+final.to_csv(filtered_data_loc, index=False)
+
+final = final[final['Total_Datapoints']>30]
+final.to_csv(filtered_short_loc, index=False)
