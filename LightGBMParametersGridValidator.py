@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun  4 13:40:30 2024
-
-@author: ownjo
+@author: Angelin Lalev
 """
 
 import sys
@@ -20,13 +18,13 @@ class LightGBMParametersGridValidator:
                  lookback : int = 1, 
                  number_of_subperiods : int = None,
                  starting_subperiod : int = 1, 
-                 num_leaves_range: range = None,
-                 max_depth_range: range = None, 
-                 learning_rate_range: range = None, 
-                 n_estimators_range: range = None, 
-                 subsample_for_bin_range: range = None, 
-                 min_data_in_leaf: range = None, 
-                 min_data_in_bin: range = None,
+                 num_leaves_ran: list = None,
+                 max_depth_ran: list = None, 
+                 learning_rate_ran: list = None, 
+                 n_estimators_ran: list = None, 
+                 subsample_for_bin_ran: list = None, 
+                 min_data_in_leaf_ran: list = None, 
+                 min_data_in_bin_ran: list = None,
                  logfile = None):
                  
         self._timeseries = timeseries
@@ -35,21 +33,18 @@ class LightGBMParametersGridValidator:
         self._lookback = lookback 
         self._number_of_subperiods = number_of_subperiods
         self._starting_subperiod = starting_subperiod 
-        self._num_leaves_range = num_leaves_range
-        self._max_depth_range = max_depth_range 
-        self._learning_rate_range = learning_rate_range
-        self._n_estimators_range = n_estimators_range
-        self._subsample_for_bin_range = subsample_for_bin_range 
-        self._min_data_in_leaf = min_data_in_leaf
-        self._min_data_in_bin = min_data_in_bin
+        self._num_leaves_ran = num_leaves_ran
+        self._max_depth_ran = max_depth_ran 
+        self._learning_rate_ran = learning_rate_ran
+        self._n_estimators_ran = n_estimators_ran
+        self._subsample_for_bin_ran = subsample_for_bin_ran 
+        self._min_data_in_leaf_ran = min_data_in_leaf_ran
+        self._min_data_in_bin_ran = min_data_in_bin_ran
         self._logfile = logfile
         
  
     def validate_combination(self, 
                             **kwargs)->tuple:
-        
-        print(self._forecast_horizon, "\n")
-        print(len(self._timeseries), "\n")
        
         assert (self._forecast_horizon * 2) < len(self._timeseries), "Timeseries too short for validation"
         
@@ -78,15 +73,15 @@ class LightGBMParametersGridValidator:
         if self._logfile is not None: 
             self._logfile.write("[Info] Starting search for hyper-parameters\n")
          
-        params = [self._num_leaves_range,         # 0
-            self._max_depth_range,                # 1
-            self._learning_rate_range,            # 2
-            self._n_estimators_range,             # 3
-            self._subsample_for_bin_range,        # 4
-            self._min_data_in_leaf,               # 5
-            self._min_data_in_bin]                # 6
+        params = [self._num_leaves_ran,         # 0
+            self._max_depth_ran,                # 1
+            self._learning_rate_ran,            # 2
+            self._n_estimators_ran,             # 3
+            self._subsample_for_bin_ran,        # 4
+            self._min_data_in_leaf_ran,         # 5
+            self._min_data_in_bin_ran]          # 6
         
-        params = [list(lst) if lst is not None else [np.NaN] for lst in params]
+        params = [lst if lst is not None else [np.NaN] for lst in params]
         
         combinations = list(itertools.product(*params))
         
@@ -128,10 +123,11 @@ class LightGBMParametersGridValidator:
                 best_forecast = forecast
                 best_combination = args
 
-            if self._logfile is not None: 
-                self._logfile.write("[INFO] Best MAPE %f\n"%best_mape)
-                for key, value in args.items(): 
-                    self._logfile.write("[INFO] %s:%s\n"%(key, value))
+
+        if self._logfile is not None: 
+            self._logfile.write("[INFO] Best MAPE %f\n"%best_mape)
+            for key, value in args.items(): 
+                self._logfile.write("[INFO] %s:%s\n"%(key, value))
  
         
         return best_forecast, best_mape, best_combination

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun  4 14:27:35 2024
-
-@author: ownjo
+@author: Angelin Lalev
 """
 from LightGBMParametersGridValidator import LightGBMParametersGridValidator
 
@@ -16,8 +14,8 @@ validator = LightGBMParametersGridValidator(
     lookback=6, 
     number_of_subperiods=12,
     starting_subperiod=3, 
-    min_data_in_leaf=range(2, 4),
-    min_data_in_bin=range(2, 4),
+    min_data_in_leaf_ran=list(range(2, 4)),
+    min_data_in_bin_ran=list(range(2, 4)),
     logfile=logfile)
 
 forecast, mape = validator.validate_combination(
