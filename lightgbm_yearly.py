@@ -19,7 +19,7 @@ forecast_filename = "forecast.csv"
 validation_accuracy_filename = "validation_mape.csv"
 model_parameters_filename = "parameters"
 logfile_name = "yearly.log"
-run_id = '2'
+run_id = '1'
 
 
 # What type of data
