@@ -16,7 +16,6 @@ results_subdir = "series"
 model_done_ext = ".done"
 model_lock_ext = ".lock"
 forecast_filename = "forecast.csv"
-validation_accuracy_filename = "validation_mape.csv"
 model_parameters_filename = "parameters"
 logfile_name = "yearly.log"
 run_id = '1'
@@ -98,6 +97,9 @@ for index,row in data_subset.iterrows():
     if starting_subperiod == None or starting_subperiod<1: 
         starting_subperiod = None
     vals=row[11:].dropna().to_list()
+    
+    assert len(vals)==total_datapoints, "Invalid series data, series: %s"%series_name
+
         
     ### Processing
     logfile.write("Now processing %s \n"%series_name)

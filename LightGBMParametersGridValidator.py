@@ -18,6 +18,7 @@ class LightGBMParametersGridValidator:
                  lookback : int = 1, 
                  number_of_subperiods : int = None,
                  starting_subperiod : int = 1, 
+                 apply_deseasonalizer: bool = False,
                  num_leaves_ran: list = None,
                  max_depth_ran: list = None, 
                  learning_rate_ran: list = None, 
@@ -33,6 +34,7 @@ class LightGBMParametersGridValidator:
         self._lookback = lookback 
         self._number_of_subperiods = number_of_subperiods
         self._starting_subperiod = starting_subperiod 
+        self._apply_deseasonalizer = apply_deseasonalizer
         self._num_leaves_ran = num_leaves_ran
         self._max_depth_ran = max_depth_ran 
         self._learning_rate_ran = learning_rate_ran
@@ -58,6 +60,7 @@ class LightGBMParametersGridValidator:
                 lookback = self._lookback, 
                 number_of_subperiods = self._number_of_subperiods, 
                 starting_subperiod = self._starting_subperiod, 
+                apply_deseasonalizer=self._apply_deseasonalizer,
                 **kwargs)
             
             forecast.generate_forecast()
