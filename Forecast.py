@@ -62,4 +62,10 @@ class Forecast(ABC):
 
         return math.sqrt(mean_squared_error(actual[from_position:to_position], forecast[from_position:to_position]))
 
-         
+
+    def asses_forecast_mape(self) -> float:
+        return self.compute_mape(self._timeseries, self._forecast, from_position = len(self._timeseries) - self._forecast_horizon)
+
+    def asses_forecast_rmse(self) -> float:
+        return self.compute_rmse(self._timeseries, self._forecast, from_position = len(self._timeseries) - self._forecast_horizon)
+

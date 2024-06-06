@@ -17,7 +17,7 @@ model_done_ext = ".done"
 model_lock_ext = ".lock"
 forecast_filename = "forecast.csv"
 model_parameters_filename = "parameters"
-logfile_name = "yearly.log"
+logfile_name = "lightgbm_yearly.log"
 run_id = '1'
 
 
@@ -150,20 +150,27 @@ for index,row in data_subset.iterrows():
     logfile.write("And we will look back to %d periods \n"%lookback_periods)
 
     search = LightGBMParametersGridValidator(
+        params,
         vals, 
         None, 
         forecast_horizon=number_of_predictions, 
         lookback = lookback_periods, 
         number_of_subperiods = number_of_subperiods,
         starting_subperiod = starting_subperiod, 
-        logfile = logfile, 
-        **params)
+        logfile = logfile)
     
-    forecast, mape, best_params = search.search()
+    try:
+        forecast, mape, best_params = search.search()
+    except Exception:
+        logfile.write("Problem with series %s"%series_name)
+        logfile.write(str(Exception))
+        sys.stderr.write("Problem with series %s"%series_name)
+        sys.stderr.write(str(Exception))
+        continue
 
     model = LightGBMForecast(
         vals, 
-        None, 
+        dates=None, 
         forecast_horizon=number_of_predictions, 
         lookback = lookback_periods, 
         number_of_subperiods = number_of_subperiods,

@@ -6,7 +6,6 @@
 import pandas as pd
 import os
 import sys
-import random 
 from LightGBMParametersGridValidator import LightGBMParametersGridValidator
 from LightGBMForecast import LightGBMForecast
 
@@ -17,7 +16,7 @@ model_done_ext = ".done"
 model_lock_ext = ".lock"
 forecast_filename = "forecast.csv"
 model_parameters_filename = "parameters"
-logfile_name = "quarterly.log"
+logfile_name = "lightgbm_quarterly.log"
 run_id = '1'
 
 
@@ -99,10 +98,11 @@ for index,row in data_subset.iterrows():
     vals=row[11:].dropna().to_list()
     
     assert len(vals)==total_datapoints, "Invalid series data, series: %s"%series_name
-
         
     ### Processing
     logfile.write("Now processing %s \n"%series_name)
+    sys.stderr.write("Now processing %s \n"%series_name)
+  
     # Compute several paths, that we need 
     model_spec = method_spec + str(run_id)
     dir_path = os.path.join(results_subdir, series_name, model_spec)
@@ -119,27 +119,34 @@ for index,row in data_subset.iterrows():
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-        if os.path.exists(done_file_path): 
-            logfile.write("%s is already done. Skipping. \n"%series_name)
-            continue
+    if os.path.exists(done_file_path): 
+        logfile.write("%s is already done. Skipping. \n"%series_name)
+        sys.stderr.write("%s is already done. Skipping. \n"%series_name)
+        continue
 
-        if os.path.exists(lock_file_path):
-            logfile.write("Lock exists for %s. Skipping. \n"%series_name)
-            continue
-        else:
-            try:
-                file = open(lock_file_path, "x")
-                file.close()
-            except FileExistsError:
-                logfile.write("Lock exists for %s. Skipping. \n", lock_file_path, series_name)
-                continue 
+    if os.path.exists(forecast_file_path) and os.path.exists(model_param_file_path):
+        sys.stderr.write("%s already has forecast. Skipping. \n"%series_name)
+        logfile.write("%s already has forecast. Skipping. \n"%series_name)
+        continue
 
+    if os.path.exists(lock_file_path):
+        sys.stderr.write("%s is already done. Skipping. \n"%series_name)
+        logfile.write("Lock exists for %s. Skipping. \n"%series_name)
+        continue
+    else:
+        try:
+            file = open(lock_file_path, "x")
+            file.close()
+        except FileExistsError:
+            logfile.write("Lock exists for %s. Skipping. \n", lock_file_path, series_name)
+            continue 
         
     lookback_periods = compute_lookback_lambda(type_of_data)(number_of_predictions, total_datapoints)
     logfile.write("We need to forecast %d periods. \n"%number_of_predictions)
     logfile.write("And we will look back to %d periods \n"%lookback_periods)
 
     search = LightGBMParametersGridValidator(
+        params,
         vals, 
         None, 
         forecast_horizon=number_of_predictions, 
@@ -147,14 +154,20 @@ for index,row in data_subset.iterrows():
         number_of_subperiods = number_of_subperiods,
         starting_subperiod = starting_subperiod, 
         apply_deseasonalizer = True,
-        logfile = logfile, 
-        **params)
-    
-    forecast, mape, best_params = search.search()
+        logfile = logfile)
+   
+    try:
+        forecast, mape, best_params = search.search()
+    except Exception:
+        logfile.write("Problem with series %s"%series_name)
+        logfile.write(str(Exception))
+        sys.stderr.write("Problem with series %s"%series_name)
+        sys.stderr.write(str(Exception))
+        continue
 
     model = LightGBMForecast(
         vals, 
-        None, 
+        dates=None, 
         forecast_horizon=number_of_predictions, 
         lookback = lookback_periods, 
         number_of_subperiods = number_of_subperiods,
@@ -178,5 +191,8 @@ for index,row in data_subset.iterrows():
     output_data["Forecast"]=model.as_list()
     output_data.to_csv(forecast_file_path)
 
+    donefile = open(done_file_path, "w")
+    donefile.close()
+    os.remove(lock_file_path)
 
 logfile.close()
