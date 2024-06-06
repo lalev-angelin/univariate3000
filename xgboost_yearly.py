@@ -7,8 +7,8 @@ import pandas as pd
 import os
 import sys
 import random 
-from LightGBMParametersGridValidator import LightGBMParametersGridValidator
-from LightGBMForecast import LightGBMForecast
+from XGBoostParametersGridValidator import XGBoostParametersGridValidator
+from XGBoostForecast import XGBoostForecast
 
 ### TUNING AND CONFIG
 datafile_path = os.path.join("data","filtered_short.csv")
