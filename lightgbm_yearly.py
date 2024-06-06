@@ -33,9 +33,9 @@ method_spec="lightgbm"
 
 # Method parameters
 params = {
-    'min_data_in_leaf_ran':list(range(2, 4)),
-    'min_data_in_bin_ran':list(range(2, 4)), 
-    'max_depth_ran':[2,4,6]
+    'min_data_in_leaf':list(range(2, 4)),
+    'min_data_in_bin':list(range(2, 4)), 
+    'max_depth':[2,4,6]
     }
 
 ### SUBROUTINES
