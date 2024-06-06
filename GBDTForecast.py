@@ -33,7 +33,7 @@ class GBDTForecast(MachineLearningForecast):
         self._kwargs = kwargs
 
     @abstractmethod
-    def instantiate_regressor(self): 
+    def instantiate_regressor(self, **kwargs): 
         pass
 
 

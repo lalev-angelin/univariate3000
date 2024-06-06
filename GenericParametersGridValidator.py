@@ -34,7 +34,7 @@ class GenericParametersGridValidator(ABC):
         
 
     @abstractmethod
-    def instantiate_forecast(self, **kwargs):
+    def instantiate_forecast(self, timeseries, **kwargs):
         pass
 
 
@@ -42,12 +42,12 @@ class GenericParametersGridValidator(ABC):
                             **kwargs)->tuple:
        
         assert (self._forecast_horizon * 2) < len(self._timeseries), "Timeseries too short for validation"
-        
+       
         sum_mape = 0
         
         for i in range(len(self._timeseries)-self._lookback, len(self._timeseries)):
                         
-            forecast = self.instantiate_forecast()
+            forecast = self.instantiate_forecast(self._timeseries[:i], **kwargs)
 
             forecast.generate_forecast()
             
@@ -62,8 +62,6 @@ class GenericParametersGridValidator(ABC):
         if self._logfile is not None: 
             self._logfile.write("[Info] Starting search for hyper-parameters\n")
         
-        best_forecast = None
-        best_combination = None
         best_mape = np.NaN
 
         combinations=[]

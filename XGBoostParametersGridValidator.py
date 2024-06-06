@@ -12,6 +12,12 @@ import numpy as np
 
 class XGBoostParametersGridValidator(GenericParametersGridValidator): 
     
-    def instantiate_forecast(self, **kwargs):
-        return  XGBoostForecast(self._timeseries, **kwargs)
+    def instantiate_forecast(self, timeseries, **kwargs):
+        return  XGBoostForecast(
+                    timeseries, 
+                    forecast_horizon = self._forecast_horizon,
+                    lookback = self._lookback,
+                    number_of_subperiods = self._number_of_subperiods,
+                    starting_subperiod = self._starting_subperiod,
+                    **kwargs)
 
