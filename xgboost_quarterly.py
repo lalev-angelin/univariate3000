@@ -33,7 +33,7 @@ method_spec="xgboost"
 # Method parameters
 params = {
     'max_depth': [2,4,6],
-    'alpha': [1, 2]
+    'learning_rate': [0.1, 0.3]
     }
 
 ### SUBROUTINES
