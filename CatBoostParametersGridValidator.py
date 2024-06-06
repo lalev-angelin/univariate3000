@@ -12,6 +12,12 @@ import numpy as np
 
 class CatBoostParametersGridValidator(GenericParametersGridValidator): 
     
-    def instantiate_forecast(self, **kwargs):
-        return  CatBoostForecast(self._timeseries, **kwargs)
+    def instantiate_forecast(self, timeseries, **kwargs):
+       return  CatBoostForecast(
+                    timeseries,
+                    forecast_horizon = self._forecast_horizon,
+                    lookback = self._lookback,
+                    number_of_subperiods = self._number_of_subperiods,
+                    starting_subperiod = self._starting_subperiod,
+                    **kwargs)
 

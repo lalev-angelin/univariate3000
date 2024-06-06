@@ -1,5 +1,5 @@
 from GBDTForecast import GBDTForecast
-from catboost import CatboostRegressor
+from catboost import CatBoostRegressor
 
 class CatBoostForecast(GBDTForecast):
 
