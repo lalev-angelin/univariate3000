@@ -8,4 +8,4 @@ class CatBoostForecast(GBDTForecast):
         
        
     def instantiate_regressor(self, **kwargs):
-        return CatBoostRegressor(**self._kwargs)
+        return CatBoostRegressor(task_type='GPU', **self._kwargs)

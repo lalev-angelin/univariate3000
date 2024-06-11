@@ -16,6 +16,7 @@ def read_parameters_file(file_path):
 
     parameters = {}
     test_mape = None
+    test_rmse = None
     max_depth = None
     learning_rate = None
     min_data_in_bin = None
@@ -36,11 +37,13 @@ def read_parameters_file(file_path):
             min_data_in_bin = int(splits[1].strip())
         if "min_data_in_leaf" in line: 
             splits = line.split(":")
-            min_data_in_split = int(splits[1].strip())
-
+            min_data_in_leaf = int(splits[1].strip())
+        if "Test RMSE" in line: 
+            splits = line.split(" ")
+            test_rmse = float(splits[2].strip())
 
     parameters_string = ''.join(lines)
-    return test_mape, max_depth, learning_rate, min_data_in_bin, min_data_in_leaf, parameters_string
+    return test_mape, test_rmse, max_depth, learning_rate, min_data_in_bin, min_data_in_leaf, parameters_string
 
 # Function to process the directory structure and extract the required information
 def process_directories(root_dir):
@@ -54,7 +57,7 @@ def process_directories(root_dir):
                 if os.path.isdir(method_path):
                     parameters_file_path = os.path.join(method_path, 'parameters')
                     if os.path.exists(parameters_file_path):
-                        test_mape, max_depth, learning_rate, min_data_in_bin, min_data_in_leaf, parameters_string = read_parameters_file(parameters_file_path)
+                        test_mape, test_rmse, max_depth, learning_rate, min_data_in_bin, min_data_in_leaf, parameters_string = read_parameters_file(parameters_file_path)
                         series_nam = series_name.split("_")
                         data.append({
                             'Series_Name': series_nam[1],
@@ -64,6 +67,7 @@ def process_directories(root_dir):
                             'Min_Data_In_Bin': min_data_in_bin,
                             'Min_Data_In_Leaf': min_data_in_leaf,
                             'Test MAPE': test_mape,
+                            'Test RMSE': test_rmse,
                             'Parameters': parameters_string.replace("\n", ",")
                         })
 
